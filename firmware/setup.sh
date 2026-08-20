@@ -78,13 +78,13 @@ echo ">> Python Environment"
 
 	# Activate Python virtual environment
 	if ! [[ -d "$D_VENV" ]]; then
-	run	"Creating"					$RC_ERR_ENV		$CMD_PYTHON -m venv "$D_VENV"
+	run "Creating"                  $RC_ERR_ENV     $CMD_PYTHON -m venv "$D_VENV"
 	fi
-	run	"Activating"				$RC_ERR_ENV		source "$D_VENV/bin/activate"
+	run "Activating"                $RC_ERR_ENV     source "$D_VENV/bin/activate"
 
 	# Install stuffs
-	run "Updating pip"				$RC_ERR_PKG		pip install --upgrade pip
-	run "Installing packages"		$RC_ERR_PKG		pip install -r requirements.txt
+	run "Updating pip"              $RC_ERR_PKG     pip install --upgrade pip
+	run "Installing packages"       $RC_ERR_PKG     pip install -r requirements.txt
 
 	echo -e "DONE\n"
 }
@@ -94,19 +94,19 @@ echo ">> West"
 
 	# Create Space
 	if ! [[ -d "$D_SPACE" ]]; then
-	run "Creating '$D_SPACE'"	$RC_ERR_GEN		mkdir -p "$D_SPACE"
+	run "Creating '$D_SPACE'"       $RC_ERR_GEN     mkdir -p "$D_SPACE"
 	fi
-	run "Entering '$D_SPACE'"	$RC_ERR_GEN		cd "$D_SPACE"
+	run "Entering '$D_SPACE'"       $RC_ERR_GEN     cd "$D_SPACE"
 
 	# West Setup
 	if ! [[ -d "./zephyr" ]]; then
-	run	"Initialise '$ZEPHYR_V'"	$RC_ERR_PKG		west init --mr "$ZEPHYR_V"
+	run "Initialise '$ZEPHYR_V'"    $RC_ERR_PKG     west init --mr "$ZEPHYR_V"
 	fi
-	run	"Enter Zephyr"				$RC_ERR_PKG		cd zephyr
-	run "Update West"				$RC_ERR_PKG		west update
-	run	"Enable Zephyr export"		$RC_ERR_PKG		west zephyr-export
-	run "Install packages"			$RC_ERR_PKG		west packages pip --install
-	run "Install SDK"				$RC_ERR_PKG		west sdk install
+	run "Enter Zephyr"              $RC_ERR_PKG     cd zephyr
+	run "Update West"               $RC_ERR_PKG     west update
+	run "Enable Zephyr export"      $RC_ERR_PKG     west zephyr-export
+	run "Install packages"          $RC_ERR_PKG     west packages pip --install
+	run "Install SDK"               $RC_ERR_PKG     west sdk install
 }
 
 
