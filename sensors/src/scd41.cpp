@@ -19,8 +19,6 @@
 #include "scd41.hpp"
 #include "util.hpp"
 
-K_WORK_DELAYABLE_DEFINE(meas_scd41, SCD41::fetch_scd41_readings);
-K_SEM_DEFINE(sem_scd41, 0, 1);
 
 namespace SCD41
 {
@@ -56,25 +54,25 @@ namespace SCD41
          case CO2:
             sensor_channel_get(dev, SENSOR_CHAN_CO2, &enviroment_data.co2);
             scd41_steps = TEMP;
-            k_work_schedule(&meas_scd41, K_MSEC(I2C_WAIT_MS));
+            k_work_schedule(&UTIL::meas_scd41, K_MSEC(I2C_WAIT_MS));
             break;
 
          case TEMP:
             sensor_channel_get(dev, SENSOR_CHAN_AMBIENT_TEMP, &enviroment_data.temp);
             scd41_steps = HUMIDITY;
-            k_work_schedule(&meas_scd41, K_MSEC(I2C_WAIT_MS));
+            k_work_schedule(&UTIL::meas_scd41, K_MSEC(I2C_WAIT_MS));
             break;
 
          case HUMIDITY:
             sensor_channel_get(dev, SENSOR_CHAN_HUMIDITY, &enviroment_data.humidity);
             scd41_steps = PRINT_DATA;
-            k_work_schedule(&meas_scd41, K_MSEC(I2C_WAIT_MS));
+            k_work_schedule(&UTIL::meas_scd41, K_MSEC(I2C_WAIT_MS));
             break;
 
          case PRINT_DATA:
 
             printk("CO2: %d ppm | Temp: %d C | Humidity: %d/100\n", enviroment_data.co2.val1, enviroment_data.temp.val1, enviroment_data.humidity.val1);
-            k_sem_give(&sem_scd41);
+            k_sem_give(&UTIL::sem_scd41);
             break;
       }
    }
@@ -83,8 +81,8 @@ namespace SCD41
       printk("Fetching enviromental data...\n");
 
       scd41_steps = CO2;
-      k_work_schedule(&meas_scd41, K_NO_WAIT);
-      k_sem_take(&sem_scd41, K_FOREVER);
+      k_work_schedule(&UTIL::meas_scd41, K_NO_WAIT);
+      k_sem_take(&UTIL::sem_scd41, K_FOREVER);
    }
    
 }

@@ -97,5 +97,4 @@ namespace BME690
 
 }
 
-
 #endif // BME690_HPP
