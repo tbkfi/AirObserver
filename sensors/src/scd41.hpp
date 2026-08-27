@@ -8,14 +8,13 @@
 
 #pragma once
 
-#ifndef SCD41_H
-#define SCD41_H
+#ifndef SCD41_HPP
+#define SCD41_HPP
 
 #include <stdbool.h>
 #include <stdint.h>
 #include <zephyr/drivers/sensor/scd4x.h>
 
-#define  I2C_WAIT_MS    250
 
 namespace SCD41
 {

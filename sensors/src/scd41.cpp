@@ -17,7 +17,7 @@
 #include <zephyr/devicetree.h>
 #include <zephyr/drivers/sensor/scd4x.h>
 #include "scd41.hpp"
-#include "mdk/nrf52840_bitfields.h"
+#include "util.hpp"
 
 K_WORK_DELAYABLE_DEFINE(meas_scd41, SCD41::fetch_scd41_readings);
 K_SEM_DEFINE(sem_scd41, 0, 1);

@@ -8,8 +8,7 @@
 #include "scd41.hpp"
 #include "bme690.hpp"
 #include "task.hpp"
-
-K_MUTEX_DEFINE(air_mutex);
+#include "util.hpp"
 
 namespace AirObserver {
    
@@ -17,7 +16,7 @@ namespace AirObserver {
       
       while (1){
          
-         k_mutex_lock(&air_mutex, K_FOREVER);
+         k_mutex_lock(&UTIL::air_mutex, K_FOREVER);
          BME690::run_bme690_readings();
          printk("Performing gas resistance measurement...\n");
 
@@ -26,12 +25,10 @@ namespace AirObserver {
          if (is_ready) {
             BME690::parse_gas_readings();
             printk("Gas resistance level is: [%.3f] ohms\n", (double)BME690::gas_calib.gas_ohms);
-            k_mutex_unlock(&air_mutex); // UNLOCK MUTEX FOR SCD41 SENSOR
          } 
-         else {
-            printk("Measurement not ready this cycle, skipping.\n");
-            k_mutex_unlock(&air_mutex); // UNLOCK MUTEX FOR SCD41 SENSOR
-         } 
+         else printk("Measurement not ready this cycle, skipping.\n");
+
+         k_mutex_unlock(&UTIL::air_mutex); // UNLOCK MUTEX FOR SCD41 SENSOR
       }
 
    }
@@ -40,15 +37,16 @@ namespace AirObserver {
 
       while (1){
      
-         k_mutex_lock(&air_mutex, K_FOREVER);
+         k_mutex_lock(&UTIL::air_mutex, K_FOREVER);
 
          if (sensor_sample_fetch(SCD41::dev) < 0) {
             printk("Failed to fetch sample\n");
+            k_mutex_unlock(&UTIL::air_mutex); // UNLOCK MUTEX FOR BME690 SENSOR
             continue;
          }
 
          SCD41::run_scd41_readings();   
-         k_mutex_unlock(&air_mutex); // UNLOCK MUTEX FOR SCD41 SENSOR
+         k_mutex_unlock(&UTIL::air_mutex); // UNLOCK MUTEX FOR BME690 SENSOR
       }
    }
    

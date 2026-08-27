@@ -6,8 +6,8 @@
 */
 #pragma once
 
-#ifndef BME690_H
-#define BME690_H
+#ifndef BME690_HPP
+#define BME690_HPP
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -31,7 +31,7 @@
 #define     CTRL_MEAS_OSRS  0x24    // temp x1, pressure x1, mode bits untouched here
 #define     GAS_ADC         0x2D    // GAS ADC DATA REGISTER 
 
-#define     I2C_WAIT_MS     250
+#define     I2C_RETRY       3
 
 namespace BME690
 {
@@ -44,22 +44,32 @@ namespace BME690
       uint8_t  res_range;  // HEATER RANGE STORED IN REGISTERED ADDRESS 0x02 <5:4>,
       uint8_t  is_calib;   // IF is_calib == 0 -> SENSOR NOT CALIBRATED, IF is_calib == 1 -> SENSOR IS CALIBRATED
       float    gas_ohms;   // VALUE OF GAS RESISTANCE
+      uint8_t  raw_range;
+      int8_t   raw_val;
    };
-   
+   // VALIDATE THAT EACH REGISTER FROM GAS_INFO GOT THE CORRECT VALUE FROM I2C TRANSACTION
+
+   struct gas_fetched {
+      uint8_t  reg;
+      void     *dest;
+      size_t   len;
+      bool     *fetched_flag;
+   };
+
+   struct fetch_flag {
+      bool par_g1;
+      bool par_g2;
+      bool par_g3;
+      bool res_range;
+      bool res_heat;
+   };
+
    // GAS PARSED STORES ALL THE DATA RESULTING FROM CALCULATIONS ON THE RAW REGISTER DATA
    struct gas_parsed {
       uint16_t    adc_gas;          // RAW RESISTANCE OUTPUT DATA 
       uint8_t     range_gas;        // ADC RAMGE OF THE MEASURED GAS RESISTANCE 
       uint8_t     heat_stab_reg;    // IF HEAT_STAB_R IS ZERO, IT INDICATES THAT EITHER THE HEATING TIME WAS NOT ENOUGH TO ALLOW THE SENSOR TO REACH TO CONFIGURED TARGET TEMPERATURE OR THAT THE TARGET TEMPERATURE WAS TOO HIGH FOR THE SENSOR TO REACH.
    };
-   
-   typedef enum {
-      REGISTER_1,
-      REGISTER_2,
-      REGISTER_3,
-      REGISTER_4,
-      REGISTER_5
-   } gas_regs;
 
    typedef enum {
       GAS_WAIT_X,
@@ -83,8 +93,9 @@ namespace BME690
    void fetch_work_handler(struct k_work *work);
    void measurement_work_handler(struct k_work *measurements);
    bool new_gas_readout(void);            // CHECK IF THERE IS A NEW VALID READ
+   bool is_fetched(struct gas_fetched *regs_fetched);
 
 }
 
 
-#endif // BME690_H
+#endif // BME690_HPP
