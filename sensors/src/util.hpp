@@ -12,7 +12,7 @@
 #define  I2C_WAIT_MS    5
 
 namespace UTIL {
-
+   // MUTEX
    extern struct k_mutex            air_mutex;
    // BME690
    extern struct k_work_delayable   gas_work;

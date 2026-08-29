@@ -23,10 +23,49 @@
 namespace SCD41
 {
 
-   struct recalib_values recalibration;
-   struct scd41_readings enviroment_data;
-   step_readings scd41_steps;
-   const struct device *dev = DEVICE_DT_GET(DT_NODELABEL(scd41));
+   struct recalib_values   recalibration;
+   struct scd41_readings   enviroment_data;
+   step_readings           scd41_steps;
+   
+   // QUEUES 
+   K_QUEUE_DEFINE(co2_queue);
+   K_QUEUE_DEFINE(temp_queue);
+   K_QUEUE_DEFINE(humid_queue);
+
+   // POOL QUEUES 
+   struct que_item         co2_pool[QUE_SIZE];
+   struct que_item         temp_pool[QUE_SIZE];
+   struct que_item         humid_pool[QUE_SIZE];
+
+  // I2C 
+   const struct device     *dev = DEVICE_DT_GET(DT_NODELABEL(scd41));
+   
+   // FUNCTIONS
+
+   void queue_sample_push(int item_queue, struct que_item *pool, uint8_t *idx, struct k_queue *que){
+      struct que_item *item = &pool[*idx];
+      *idx = (*idx + 1) % QUE_SIZE;
+
+      item->value = item_queue;
+      k_queue_append(que, item);
+   }
+   
+   float avg_measured(struct k_queue *que) {
+      float sum = 0.0f;
+      int count = 0;
+
+      while (!k_queue_is_empty(que)) {
+         void *data = k_queue_get(que, K_MSEC(250));
+         if (data == NULL) {
+            break;
+         }
+         struct que_item *item = (struct que_item *)data;
+         sum += item->value;
+         count++;
+      }
+
+      return (count > 0) ? (sum / count) : 0.0f;
+   }
 
    bool force_scd41_recalib(void){
 
@@ -50,6 +89,7 @@ namespace SCD41
    }
 
    void fetch_scd41_readings(struct k_work *read_scd41){
+
       switch (scd41_steps){
          case CO2:
             sensor_channel_get(dev, SENSOR_CHAN_CO2, &enviroment_data.co2);
@@ -65,24 +105,16 @@ namespace SCD41
 
          case HUMIDITY:
             sensor_channel_get(dev, SENSOR_CHAN_HUMIDITY, &enviroment_data.humidity);
-            scd41_steps = PRINT_DATA;
-            k_work_schedule(&UTIL::meas_scd41, K_MSEC(I2C_WAIT_MS));
-            break;
-
-         case PRINT_DATA:
-
-            printk("CO2: %d ppm | Temp: %d C | Humidity: %d/100\n", enviroment_data.co2.val1, enviroment_data.temp.val1, enviroment_data.humidity.val1);
             k_sem_give(&UTIL::sem_scd41);
             break;
       }
    }
 
    void run_scd41_readings(void){
-      printk("Fetching enviromental data...\n");
-
       scd41_steps = CO2;
       k_work_schedule(&UTIL::meas_scd41, K_NO_WAIT);
       k_sem_take(&UTIL::sem_scd41, K_FOREVER);
+
    }
    
 }

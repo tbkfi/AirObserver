@@ -14,14 +14,20 @@
 
 #define I2C0_NODE DT_NODELABEL(bme690)
 
+
 namespace BME690
 {
+   K_QUEUE_DEFINE(gas_queue);
+
    const struct i2c_dt_spec bme_dev = I2C_DT_SPEC_GET(I2C0_NODE);
    struct gas_info          gas_calib;
    struct gas_parsed        curated_gas;
    measurement_steps        current_meas_step;
    struct fetch_flag        gas_was_fetched;
 
+   struct gas_que_item gas_pool[GAS_TOTAL_QUE];
+   static uint8_t gas_pool_idx;
+   
    static size_t step_idx         = 0;
    static int    retry_count      = 0;
    static int    meas_retry_count = 0;
@@ -197,7 +203,7 @@ namespace BME690
             printk("There is no valid data. Value of bit 4 is: 0\n");
             return false;
          }
-         printk("Sensor ready to perform readings!\n");
+         //printk("Sensor ready to perform readings!\n");
          curated_gas.heat_stab_reg = heat_stab_r;
          return true;
       }
@@ -224,7 +230,7 @@ namespace BME690
       gas_range = gas_r_lsb & 0x0F;                                // "Lives" on bits <3:0>
 
       // DEBUG/CURIOSITY PRINT
-      printk("gas_adc: [%d], gas_range: [%d]\n", gas_adc, gas_range);
+      //printk("gas_adc: [%d], gas_range: [%d]\n", gas_adc, gas_range);
 
       curated_gas.adc_gas   = gas_adc;
       curated_gas.range_gas = gas_range;
@@ -238,10 +244,35 @@ namespace BME690
       float gas_res = 1000000.0f * (float)var1 / (float)var2;
       gas_calib.gas_ohms = gas_res;
    }
+   
+   void gas_sample_push(float value) {
+       struct gas_que_item *item = &gas_pool[gas_pool_idx];
+       gas_pool_idx = (gas_pool_idx + 1) % GAS_TOTAL_QUE;
 
+       item->value = value;
+       k_queue_append(&gas_queue, item);
+   }
+
+   float avg_gas_measured(struct k_queue *gas_que) {
+      float sum = 0.0f;
+      int count = 0;
+
+      while (!k_queue_is_empty(gas_que)) {
+         void *data = k_queue_get(gas_que, K_MSEC(250));
+         if (data == NULL) {
+            break;
+         }
+         struct gas_que_item *item = (struct gas_que_item *)data;
+         sum += item->value;
+         count++;
+      }
+
+      return (count > 0) ? (sum / count) : 0.0f;
+   }
+   
    void run_bme690_readings(void) {
       // EXPERIMENTAL GAS SENSOR SEQUENCE (FIELD 0)
-      printk("Fetching values to perform calibration...\n");
+      //printk("Fetching values to perform calibration...\n");
       current_meas_step = GAS_WAIT_X;
 
       k_work_schedule(&UTIL::gas_work, K_NO_WAIT);
@@ -250,11 +281,13 @@ namespace BME690
       k_sem_take(&UTIL::sem_gas, K_FOREVER);
       k_sem_take(&UTIL::sem_meas, K_FOREVER);
 
-      printk("Calculating res_heat_x\n");
+      //printk("Calculating res_heat_x\n");
       calc_res_heat();
-      printk("res_heat_x: [%d]\n", gas_calib.is_calib);
+      //printk("res_heat_x: [%d]\n", gas_calib.is_calib);
 
-      printk("Enabling gas measurment...\n");
+      //printk("Enabling gas measurment...\n");
       configure_oversampling();
    }
+     
+   
 }

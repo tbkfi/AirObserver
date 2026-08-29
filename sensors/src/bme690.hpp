@@ -31,7 +31,8 @@
 #define     CTRL_MEAS_OSRS  0x24    // temp x1, pressure x1, mode bits untouched here
 #define     GAS_ADC         0x2D    // GAS ADC DATA REGISTER 
 
-#define     I2C_RETRY       3
+#define     I2C_RETRY         3
+#define     GAS_TOTAL_QUE     8
 
 namespace BME690
 {
@@ -71,6 +72,11 @@ namespace BME690
       uint8_t     heat_stab_reg;    // IF HEAT_STAB_R IS ZERO, IT INDICATES THAT EITHER THE HEATING TIME WAS NOT ENOUGH TO ALLOW THE SENSOR TO REACH TO CONFIGURED TARGET TEMPERATURE OR THAT THE TARGET TEMPERATURE WAS TOO HIGH FOR THE SENSOR TO REACH.
    };
 
+   struct gas_que_item {
+      void *reserved;
+      float value;
+   };
+
    typedef enum {
       GAS_WAIT_X,
       RES_HEAT_X,
@@ -82,6 +88,7 @@ namespace BME690
    extern struct gas_info           gas_calib;
    extern struct gas_parsed         curated_gas;
    extern struct k_queue            gas_queue;
+   extern struct gas_que_item       gas_pool[GAS_TOTAL_QUE];
 
    void fetch_gas_values(void);           // FETCH VALUES FROM REGISTERS TO START CALCULATIOS AND CONVERSIONS FOR MEASURING GAS IN ENVIROMENT
    void calc_res_heat(void);              // CALCULATE HEAT RESISTANCE 
@@ -94,6 +101,8 @@ namespace BME690
    void measurement_work_handler(struct k_work *measurements);
    bool new_gas_readout(void);            // CHECK IF THERE IS A NEW VALID READ
    bool is_fetched(struct gas_fetched *regs_fetched);
+   void gas_sample_push(float gas_item);
+   float avg_gas_measured(struct k_queue *gas_queue);
 
 }
 

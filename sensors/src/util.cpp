@@ -4,6 +4,7 @@
  *    Matias Villa
  */
 
+#include "util.hpp"
 #include <zephyr/kernel.h>
 #include "bme690.hpp"
 #include "scd41.hpp"

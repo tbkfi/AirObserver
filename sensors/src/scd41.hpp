@@ -15,13 +15,17 @@
 #include <stdint.h>
 #include <zephyr/drivers/sensor/scd4x.h>
 
+#define  RETRY_I2C         3
+#define  QUE_SIZE          8
 
 namespace SCD41
 {
 
-   bool force_scd41_recalib(void);
-   void fetch_scd41_readings(struct k_work *read_scd41);
-   void run_scd41_readings(void);;
+   bool  force_scd41_recalib(void);
+   void  fetch_scd41_readings(struct k_work *read_scd41);
+   void  run_scd41_readings(void);
+   void  queue_sample_push(int item_queue, struct que_item *pool, uint8_t *idx, struct k_queue *que);
+   float avg_measured(struct k_queue *que);
 
    struct scd41_readings {
       struct sensor_value co2;
@@ -33,17 +37,29 @@ namespace SCD41
       uint16_t correction;
       uint16_t target_ppm;
    };
-   
+
+   struct que_item {
+      void *reserved;
+      int value;
+   };
+     
    typedef enum {
       CO2,
       TEMP,
-      HUMIDITY,
-      PRINT_DATA
+      HUMIDITY
    } step_readings;
 
-   extern const struct device *dev;
-   extern struct scd41_readings enviroment_data;
-
+   extern const struct device    *dev;
+   extern struct scd41_readings  enviroment_data;
+   // queues 
+   extern struct k_queue         co2_queue;
+   extern struct k_queue         temp_queue;
+   extern struct k_queue         humid_queue;
+   // item queues 
+   extern struct que_item        sample_pool[QUE_SIZE];
+   extern struct que_item        co2_pool[QUE_SIZE];   
+   extern struct que_item        temp_pool[QUE_SIZE];   
+   extern struct que_item        humid_pool[QUE_SIZE];   
 }   
 
 #endif // SCD41_H
