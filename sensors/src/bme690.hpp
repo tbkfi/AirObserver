@@ -11,28 +11,31 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "zephyr/drivers/i2c.h"
 #include "zephyr/kernel.h"
 
-// REGISTER ADDRESSES FOR CALCULATING GAS STUFF
-#define     PAR_G1          0xED    // CALIBRATION PARAMETER
-#define     PAR_G2          0xEB    // CALIBRATION PARAMETER
-#define     PAR_G2_B        0xEC    // CALIBRATION PARAMETER
-#define     PAR_G3          0xEE    // CALIBRATION PARAMETER
-#define     RES_HEAT_RANGE  0x02    // HEATER RANGE bit <5:4>
-#define     RES_HEAT_VALUE  0x00    // HEATER RESISTANCE CORRECTION FACTOR
-#define     AMB_TEMP        26      // ESTIMATED ENVIROEMENTAL TEMPERATURE
-#define     TARGET_TEMP     200     // TEMPERATURE TO HEAT SENSOR
-#define     CTRL_MEAS       0x74    // SELECT SENSOR POWER MODE
-#define     CTRL_GAS_1      0x71    // bit 5 = run_gas, bit <3:0> nb_conv 
-#define     RES_HEAT_0      0x5a    // TARGET HEATER RESISTANCE                                  
-#define     GAS_WAIT_0      0x64    // SETS THE WAIT TIME FOR GAS MEASUREMENT
-#define     RESET_REG       0xE0    // SOFTWARE RESET REGISTER 
-#define     RESET_CMD       0xB6    // SOFTWARE RESET COMMAND 
-#define     CTRL_MEAS_OSRS  0x24    // temp x1, pressure x1, mode bits untouched here
-#define     GAS_ADC         0x2D    // GAS ADC DATA REGISTER 
-
-#define     I2C_RETRY         3
-#define     GAS_TOTAL_QUE     8
+namespace BME690_REGISTERS
+{
+   // REGISTER ADDRESSES FOR CALCULATING GAS STUFF
+   constexpr uint8_t PAR_G1            = 0xED; // CALIBRATION PARAMETER 
+   constexpr uint8_t PAR_G2            = 0xEC; // CALIBRATION PARAMETER
+   constexpr uint8_t PAR_G2_B          = 0xEC; // CALIBRATION PARAMETER
+   constexpr uint8_t PAR_G3            = 0xEE; // CALIBRATION PARAMETER
+   constexpr uint8_t RES_HEAT_RANGE    = 0x02; // HEATER RANGE IN BIT <5:4>
+   constexpr uint8_t RES_HEAT_VALUE    = 0x00; // HEATER RESISTANCE CORRECTION FACTOR
+   constexpr uint8_t AMB_TEMP          = 26;   // ESTIMATED ENVIROMENTAL TEMPERATURE
+   constexpr uint8_t TARGET_TEMP       = 200;  // TEMPERATURE TO HEAT SENSOR (CELSIUS)
+   constexpr uint8_t CTRL_MEAS         = 0x74; // SELECT SENSOR POWER MODE 
+   constexpr uint8_t CTRL_GAS_1        = 0x71; // bit = run_gas, bit <3:0> = nb_conv 
+   constexpr uint8_t RES_HEAT_0        = 0x5A; // TARGET HEATER RESISTANCE
+   constexpr uint8_t GAS_WAIT_0        = 0x64; // SETS THE WAIT TIME FOR GAS MEASUREMENT IN SECONDS 
+   constexpr uint8_t RESET_REG         = 0xE0; // SOFTWARE RESET REGISTER 
+   constexpr uint8_t RESET_CMD         = 0xB6; // SOFTWARE RESET COMMAND 
+   constexpr uint8_t CTRL_MEAS_OSRS    = 0x24; // TEMP X1, PRESSURE X1, MODE BITS UNTOUCHED HERE 
+   constexpr uint8_t GAS_ADC           = 0x2D; // GAS ADC DATA REGISTER 
+   constexpr uint8_t I2C_RETRY         = 3;    // RETRY UPON UNSUCCESFUL I2C TRANSACTION
+   constexpr uint8_t GAS_TOTAL_QUE     = 8;    // SIZE OF QUEUE 
+}
 
 namespace BME690
 {
@@ -51,13 +54,14 @@ namespace BME690
    // VALIDATE THAT EACH REGISTER FROM GAS_INFO GOT THE CORRECT VALUE FROM I2C TRANSACTION
 
    struct gas_fetched {
-      uint8_t  reg;
-      void     *dest;
-      size_t   len;
-      bool     *fetched_flag;
+      uint8_t  reg;              // VALUE FROM REGISTER 
+      void     *dest;            // POINTER TO VARIABLA THAT WILL HOLD THE VALUE COMING FROM THE REGISTER 
+      size_t   len;              // SIZE OF DATA 
+      bool     *fetched_flag;    // TRUE FOR SUCCESFUL I2C TRANSACTION
    };
 
    struct fetch_flag {
+      // FLAGAS FOR SUCCESFUL I2C TRANSACTIONS WHEN FETCHING FROM REGISTERS BEFORE PERFORMING CALIBRATION
       bool par_g1;
       bool par_g2;
       bool par_g3;
@@ -83,12 +87,16 @@ namespace BME690
       RUN_GAS,
       NB_CONV,
    } measurement_steps;
-
-   extern const struct i2c_dt_spec  bme_dev;
-   extern struct gas_info           gas_calib;
-   extern struct gas_parsed         curated_gas;
-   extern struct k_queue            gas_queue;
-   extern struct gas_que_item       gas_pool[GAS_TOTAL_QUE];
+   
+   struct Context {
+      i2c_dt_spec    bme_dev;       // I2C 
+      gas_info       gas_calib;     // CALIBRATION VALUES 
+      gas_parsed     curated_gas;   // VALUES AFTER CALCULATIONS 
+      k_queue        gas_queue;     // QUUEUE FOR GAS RESISTANCE READINGS 
+      gas_que_item   gas_pool[BME690_REGISTERS::GAS_TOTAL_QUE];
+   };
+ 
+   Context& ctx(void);
 
    void fetch_gas_values(void);           // FETCH VALUES FROM REGISTERS TO START CALCULATIOS AND CONVERSIONS FOR MEASURING GAS IN ENVIROMENT
    void calc_res_heat(void);              // CALCULATE HEAT RESISTANCE 
@@ -100,7 +108,6 @@ namespace BME690
    void fetch_work_handler(struct k_work *work);
    void measurement_work_handler(struct k_work *measurements);
    bool new_gas_readout(void);            // CHECK IF THERE IS A NEW VALID READ
-   bool is_fetched(struct gas_fetched *regs_fetched);
    void gas_sample_push(float gas_item);
    float avg_gas_measured(struct k_queue *gas_queue);
 
