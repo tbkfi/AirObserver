@@ -2755,38 +2755,6 @@ events:
       CMAKE_SYSTEM_PROGRAM_PATH:
         - "/bin"
   -
-    kind: "try_compile-v1"
-    backtrace:
-      - "/usr/share/cmake/Modules/Internal/CheckSourceCompiles.cmake:81 (try_compile)"
-      - "/usr/share/cmake/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
-      - "/usr/share/cmake/Modules/CheckCCompilerFlag.cmake:105 (cmake_check_compiler_flag)"
-      - "/home/arch_matias/zephyrproject/zephyr/cmake/modules/extensions.cmake:2467 (check_c_compiler_flag)"
-      - "/home/arch_matias/zephyrproject/zephyr/cmake/modules/extensions.cmake:1245 (check_compiler_flag)"
-      - "/home/arch_matias/zephyrproject/zephyr/cmake/modules/extensions.cmake:2506 (zephyr_check_compiler_flag)"
-      - "/home/arch_matias/zephyrproject/zephyr/cmake/modules/extensions.cmake:2482 (target_cc_option_fallback)"
-      - "/home/arch_matias/zephyrproject/zephyr/cmake/modules/extensions.cmake:155 (target_cc_option)"
-      - "/home/arch_matias/zephyrproject/zephyr/CMakeLists.txt:634 (zephyr_cc_option)"
-    directories:
-      source: "/home/arch_matias/AirObserver/sensors/build/CMakeFiles/CMakeScratch/TryCompile-756osO"
-      binary: "/home/arch_matias/AirObserver/sensors/build/CMakeFiles/CMakeScratch/TryCompile-756osO"
-    cmakeVariables:
-      CMAKE_CXX_STDLIB_MODULES_JSON: ""
-      CMAKE_C_FLAGS: ""
-      CMAKE_C_FLAGS_DEBUG: "-g"
-      CMAKE_EXE_LINKER_FLAGS: ""
-      CMAKE_MODULE_PATH: "/home/arch_matias/zephyrproject/zephyr/cmake/modules"
-    buildResult:
-      variable: "check_fmacro_prefix_map__home_arch_matias_AirObserver_sensors_CMAKE_SOURCE_DIR_C__nostartfiles__nostdlib__isystem___home_arch_matias_zephyr_sdk_1_0_1_gnu_arm_zephyr_eabi_bin____lib_gcc_arm_zephyr_eabi_14_3_0_include___isystem___home_arch_matias_zephyr_sdk_1_0_1_gnu_arm_zephyr_eabi_bin____lib_gcc_arm_zephyr_eabi_14_3_0_include___Wl___unresolved_symbols_ignore_in_object_files__Wl___entry_0__fuse_ld_bfd"
-      cached: true
-      stdout: |
-        Change Dir: '/home/arch_matias/AirObserver/sensors/build/CMakeFiles/CMakeScratch/TryCompile-756osO'
-        
-        Run Build Command(s): /usr/bin/ninja -v cmTC_903bb
-        [1/2] /home/arch_matias/zephyr-sdk-1.0.1/gnu/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc -Dcheck_fmacro_prefix_map__home_arch_matias_AirObserver_sensors_CMAKE_SOURCE_DIR_C__nostartfiles__nostdlib__isystem___home_arch_matias_zephyr_sdk_1_0_1_gnu_arm_zephyr_eabi_bin____lib_gcc_arm_zephyr_eabi_14_3_0_include___isystem___home_arch_matias_zephyr_sdk_1_0_1_gnu_arm_zephyr_eabi_bin____lib_gcc_arm_zephyr_eabi_14_3_0_include___Wl___unresolved_symbols_ignore_in_object_files__Wl___entry_0__fuse_ld_bfd  -nostartfiles -nostdlib -isystem "/home/arch_matias/zephyr-sdk-1.0.1/gnu/arm-zephyr-eabi/bin/../lib/gcc/arm-zephyr-eabi/14.3.0/include" -isystem "/home/arch_matias/zephyr-sdk-1.0.1/gnu/arm-zephyr-eabi/bin/../lib/gcc/arm-zephyr-eabi/14.3.0/include" -Wl,--unresolved-symbols=ignore-in-object-files -Wl,--entry=0 -fuse-ld=bfd   -fmacro-prefix-map=/home/arch_matias/AirObserver/sensors=CMAKE_SOURCE_DIR -o CMakeFiles/cmTC_903bb.dir/src.c.obj -c /home/arch_matias/AirObserver/sensors/build/CMakeFiles/CMakeScratch/TryCompile-756osO/src.c
-        [2/2] : && /home/arch_matias/zephyr-sdk-1.0.1/gnu/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc -nostartfiles -nostdlib -isystem "/home/arch_matias/zephyr-sdk-1.0.1/gnu/arm-zephyr-eabi/bin/../lib/gcc/arm-zephyr-eabi/14.3.0/include" -isystem "/home/arch_matias/zephyr-sdk-1.0.1/gnu/arm-zephyr-eabi/bin/../lib/gcc/arm-zephyr-eabi/14.3.0/include" -Wl,--unresolved-symbols=ignore-in-object-files -Wl,--entry=0 -fuse-ld=bfd  CMakeFiles/cmTC_903bb.dir/src.c.obj -o cmTC_903bb   && :
-        
-      exitCode: 0
-  -
     kind: "find-v1"
     backtrace:
       - "/home/arch_matias/zephyrproject/modules/lib/picolibc/CMakeLists.txt:49 (find_program)"
