@@ -272,7 +272,7 @@ namespace BME690
       int count = 0;
 
       while (!k_queue_is_empty(gas_que)) {
-         void *data = k_queue_get(gas_que, K_MSEC(250));
+         void *data = k_queue_get(gas_que, K_MSEC(UTIL::QUE_DELAY));
          if (data == NULL) {
             break;
          }
