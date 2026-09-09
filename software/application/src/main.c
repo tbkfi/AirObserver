@@ -1,3 +1,4 @@
+
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/net/wifi_mgmt.h>
@@ -126,6 +127,8 @@ static int enable_ap_mode(void)
 	ap_config.ssid_length = sizeof(CONFIG_WIFI_SAMPLE_AP_SSID) - 1;
 	ap_config.psk = (const uint8_t *)CONFIG_WIFI_SAMPLE_AP_PSK;
 	ap_config.psk_length = sizeof(CONFIG_WIFI_SAMPLE_AP_PSK) - 1;
+    printf ("%d \n", WIFI_CHANNEL_ANY);
+    int wifi_channel_any = WIFI_CHANNEL_ANY;
 	ap_config.channel = WIFI_CHANNEL_ANY;
 	ap_config.band = WIFI_FREQ_BAND_2_4_GHZ;
 
@@ -164,6 +167,9 @@ static int connect_to_wifi(void)
 	sta_config.channel = WIFI_CHANNEL_ANY;
 	sta_config.band = WIFI_FREQ_BAND_2_4_GHZ;
 
+    printf ("%d \n", WIFI_CHANNEL_ANY);
+    int wifi_channel_any = WIFI_CHANNEL_ANY;
+
 	LOG_INF("Connecting to SSID: %s\n", sta_config.ssid);
 
 	int ret = net_mgmt(NET_REQUEST_WIFI_CONNECT, sta_iface, &sta_config,
@@ -180,16 +186,19 @@ int main(void)
 	k_sleep(K_SECONDS(5));
 
 	net_mgmt_init_event_callback(&cb, wifi_event_handler, NET_EVENT_WIFI_MASK);
+
+	LOG_INF("init event callback\n");
 	net_mgmt_add_event_callback(&cb);
 
 	/* Get AP interface in AP-STA mode. */
-	ap_iface = net_if_get_wifi_sap();
+	// ap_iface = net_if_get_wifi_sap();
 
 	/* Get STA interface in AP-STA mode. */
 	sta_iface = net_if_get_wifi_sta();
 
-	enable_ap_mode();
+	// enable_ap_mode();
 	connect_to_wifi();
 
 	return 0;
 }
+
