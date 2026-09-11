@@ -6,8 +6,8 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(application)
 
 target_sources(app PRIVATE
-    src/main.c
-    src/wifictl.h
-    src/wifictl.c
+    src/main.cpp
+    src/wifictl.hpp
+    src/wifictl.cpp
 )
 

@@ -18,10 +18,9 @@ static struct wifi_connect_req_params sta_config;
 static struct net_mgmt_event_callback cb;
 
 // Check necessary definitions
-BUILD_ASSERT(sizeof(CONFIG_WIFI_SAMPLE_AP_SSID) > 1,
-         "CONFIG_WIFI_SAMPLE_AP_SSID is empty. Please set it in conf file.");
 BUILD_ASSERT(sizeof(CONFIG_WIFI_SAMPLE_SSID) > 1,
          "CONFIG_WIFI_SAMPLE_SSID is empty. Please set it in conf file.");
+#pragma message ("NOTE: change CONFIG_WIFI_SAMPLE_SSID to use general system context")
 
 // static here == only visible to 'this' translation unit
 static void wifi_event_handler

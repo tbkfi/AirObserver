@@ -6,8 +6,7 @@
 
 LOG_MODULE_REGISTER (wifi, LOG_LEVEL_DBG); // logging/log.h
 
-
-#include "wifictl.h"
+#include "wifictl.hpp"
 
 static void wifi_event_handler
 (struct net_mgmt_event_callback *cb, uint64_t mgmt_event, struct net_if *iface)
