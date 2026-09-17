@@ -9,5 +9,7 @@ target_sources(app PRIVATE
     src/main.cpp
     src/wifictl.hpp
     src/wifictl.cpp
+    src/bme690.hpp
+    src/bme690.cpp
 )
 

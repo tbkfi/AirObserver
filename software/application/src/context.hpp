@@ -1,4 +1,7 @@
 #pragma once
+#include "bme690.hpp"
+
+// copywrong. made by Don Pablo
 
 // store system context
 // make it accessible from different parts of code, and make use of thread safe
@@ -20,13 +23,11 @@ public:
         return instance;
     }
 
-    int a;
+    // fields are accessed with -> 
+    sensor::BME690::context* bme690_data;
 
 private:
     ctx () = default;
-
-    // static std::unique_ptr <ctx> ctx_ptr;
-    // static inline ctx& instance;
 };
 
 } // namespace sys
