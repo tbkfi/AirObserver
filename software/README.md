@@ -2,6 +2,7 @@
 
 ## 1. Brief Summary
 
+HTTP API and Web-Socket to insert data from the IoT device sensors via WiFi.
 
 ## 2.Technology Stack
 The project relies on the listed technologies to run :
