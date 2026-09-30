@@ -9,10 +9,14 @@
 #include <zephyr/device.h>
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/i2c.h>
+
 #include "bme690.hpp"
 #include "util.hpp"
 
+#include "context.hpp"
 #define I2C0_NODE DT_NODELABEL(bme690)
+
+
 namespace sys {
 namespace sensor {
 namespace BME690 {
@@ -28,13 +32,15 @@ namespace BME690 {
     struct context bme_ctx{
         .bme_dev = I2C_DT_SPEC_GET(I2C0_NODE),
     };
-    
-    context& ctx() {return bme_ctx;}
 
+    context& ctx () {
+        return bme_ctx;
+    }
+    
     void fetch_work_handler(struct k_work *work) {
         // FETCH REGISTERS VALUES NECESSARY TO PERFORM SENSOR HEATING AND CALIBRATION
-        auto &c = ctx();
-        // auto &c_util = UTIL::util_ctx();
+        auto &c = sys::sensor::BME690::ctx();
+        auto &c_util = sys::util::ctx ();
 
         struct gas_fetched steps[] = {
             { BME690::REGISTERS::PAR_G1, &c.gas_calib.par_g1, 
@@ -72,24 +78,24 @@ namespace BME690 {
         }
 
         if (step_idx < ARRAY_SIZE(steps)) {
-            k_work_schedule(&c.gas_work, K_MSEC(UTIL::I2C_WAIT_MS));
+            k_work_schedule(&c_util.gas_work, K_MSEC(sys::util::I2C_WAIT_MS));
         } else {
             c.gas_calib.res_range = (c.gas_calib.raw_range >> 4) & 0x03;    // bits <5:4>
             c.gas_calib.res_heat  = c.gas_calib.raw_val;
             step_idx = 0;    // reset for next fetch cycle
-            k_sem_give(&c.sem_gas);
+            k_sem_give(&c_util.sem_gas);
         }
     }
 
     void configure_oversampling(void) {
-        auto &c = ctx();
+        auto &c = sys::sensor::BME690::ctx ();
         // configure sensor oversampling rate for gas sensor
         uint8_t ctrl_meas_val[2] = {BME690::REGISTERS::CTRL_MEAS, BME690::REGISTERS::CTRL_MEAS_OSRS};
         i2c_write_dt(&c.bme_dev, ctrl_meas_val, sizeof(ctrl_meas_val));
     }
 
     void soft_reset(void) {
-        auto &c = ctx();
+        auto &c = sys::sensor::BME690::ctx ();
         // PERORM A SOFTWARE RESET
         uint8_t buf[2] = {BME690::REGISTERS::RESET_REG, BME690::REGISTERS::RESET_CMD};
         i2c_write_dt(&c.bme_dev, buf, sizeof(buf));
@@ -99,7 +105,7 @@ namespace BME690 {
         // Formula provided by Bosch in the datasheet
         // Calculate the values necessary for sensor calibration
         // Heat resistance calculation
-        auto &c = ctx();
+        auto &c = sys::sensor::BME690::ctx ();
         double var1         = ((double)c.gas_calib.par_g1 / 16.0) + 49.0;
         double var2         = (((double)c.gas_calib.par_g2 / 32768.0) * 0.0005) + 0.00235;
         double var3         = (double)c.gas_calib.par_g3 / 1024.0;
@@ -113,8 +119,9 @@ namespace BME690 {
 
     void measurement_work_handler(struct k_work *measurements) {
         // HEAT GAS SENSOR
-        auto &c = ctx();
-        auto &util_c = UTIL::util_ctx();
+        // auto &c = ctx();
+        auto& c = sys::sensor::BME690::ctx ();
+        auto& util_c = sys::util::ctx();
 
         uint8_t gas_wait_0[2] = {BME690::REGISTERS::GAS_WAIT_0, 0x59};
         uint8_t res_heat_0[2] = {BME690::REGISTERS::RES_HEAT_0, (uint8_t)c.gas_calib.is_calib};
@@ -131,14 +138,14 @@ namespace BME690 {
             if (rc != 0) {
                 printk("Error writing gas_wait_0: [%d]\n", rc);
                 if (++meas_retry_count < BME690::I2C_RETRY) {
-                    k_work_schedule(&util_c.meas_steps, K_MSEC(UTIL::I2C_WAIT_MS));
+                    k_work_schedule(&util_c.meas_steps, K_MSEC(sys::util::I2C_WAIT_MS));
                     return;    // retry same step
                 }
                 printk("Giving up on gas_wait_0 after %d retries\n", BME690::I2C_RETRY);
             }
             meas_retry_count  = 0;
             current_meas_step = RES_HEAT_X;
-            k_work_schedule(&util_c.meas_steps, K_MSEC(UTIL::I2C_WAIT_MS));
+            k_work_schedule(&util_c.meas_steps, K_MSEC(sys::util::I2C_WAIT_MS));
             break;
 
         case RES_HEAT_X:
@@ -146,14 +153,14 @@ namespace BME690 {
             if (rc != 0) {
                 printk("Error writing res_heat_0: [%d]\n", rc);
                 if (++meas_retry_count < BME690::I2C_RETRY) {
-                    k_work_schedule(&util_c.meas_steps, K_MSEC(UTIL::I2C_WAIT_MS));
+                    k_work_schedule(&util_c.meas_steps, K_MSEC(sys::util::I2C_WAIT_MS));
                     return;
                 }
                 printk("Giving up on res_heat_0 after %d retries\n", BME690::I2C_RETRY);
             }
             meas_retry_count  = 0;
             current_meas_step = RUN_GAS;
-            k_work_schedule(&util_c.meas_steps, K_MSEC(UTIL::I2C_WAIT_MS));
+            k_work_schedule(&util_c.meas_steps, K_MSEC(sys::util::I2C_WAIT_MS));
             break;
 
         case RUN_GAS:
@@ -161,13 +168,13 @@ namespace BME690 {
             if (rc != 0) {
                 printk("Error reading ctrl_gas_1: [%d]\n", rc);
                 if (++meas_retry_count < BME690::I2C_RETRY) {
-                    k_work_schedule(&util_c.meas_steps, K_MSEC(UTIL::I2C_WAIT_MS));
+                    k_work_schedule(&util_c.meas_steps, K_MSEC(sys::util::I2C_WAIT_MS));
                     return;
                 }
                 printk("Giving up on ctrl_gas_1 after %d retries\n", BME690::I2C_RETRY);
                 meas_retry_count  = 0;
                 current_meas_step = NB_CONV;    // don't hang forever, but run_gas bit is unset
-                k_work_schedule(&util_c.meas_steps, K_MSEC(UTIL::I2C_WAIT_MS));
+                k_work_schedule(&util_c.meas_steps, K_MSEC(sys::util::I2C_WAIT_MS));
                 break;
             }
             run_gas &= ~0x0F;      // clear nb_conv index to 0
@@ -178,7 +185,7 @@ namespace BME690 {
             }
             meas_retry_count  = 0;
             current_meas_step = NB_CONV;
-            k_work_schedule(&util_c.meas_steps, K_MSEC(UTIL::I2C_WAIT_MS));
+            k_work_schedule(&util_c.meas_steps, K_MSEC(sys::util::I2C_WAIT_MS));
             break;
 
         case NB_CONV:
@@ -186,7 +193,7 @@ namespace BME690 {
             if (rc != 0) {
                 printk("Error reading ctrl_meas register: [%d]\n", rc);
                 if (++meas_retry_count < BME690::I2C_RETRY) {
-                    k_work_schedule(&util_c.meas_steps, K_MSEC(UTIL::I2C_WAIT_MS));
+                    k_work_schedule(&util_c.meas_steps, K_MSEC(sys::util::I2C_WAIT_MS));
                     return;
                 }
                 printk("Giving up on ctrl_meas after %d retries\n", BME690::I2C_RETRY);
@@ -208,7 +215,7 @@ namespace BME690 {
 
     bool new_gas_readout(void) {
         // IF HEAT_STAB_R IS EQUAL TO 1, SENSOR IS READY TO MEASURE GAS IN ENVIROEMENT
-        auto &c = ctx();
+        auto &c = sys::sensor::BME690::ctx ();
         uint8_t gas_r_lsb = 0x2D;
         uint8_t heat_stab_r;
 
@@ -233,7 +240,7 @@ namespace BME690 {
         // CONVERT GAS RESISTANCE MEASUREMENT TO OHMS.
         // ELI5 EXPLANATION: THE GREATER THE RESISTANCE, CLEANER THE AIR.
         // YET TO IMPLEMENT A MORE INTUITIVE READING OF GAS IN ENVIROEMENT.
-        auto &c = ctx();
+        auto &c = sys::sensor::BME690::ctx ();
 
         uint8_t  msb_reg = 0x2C;
         uint8_t  lsb_reg = 0x2D;
@@ -266,12 +273,12 @@ namespace BME690 {
     
     void gas_sample_push(float value) {
         // PUSH GAS RESISTANCE FUNCTION TO ITS QUEUE 
-        auto &c = ctx(); 
+        auto &c = sys::sensor::BME690::ctx (); 
         auto *item = &c.gas_pool[gas_pool_idx];
         gas_pool_idx = (gas_pool_idx + 1) % BME690::GAS_TOTAL_QUE;
 
-         item->value = value;
-         k_queue_append(&c.gas_queue, item);
+        item->value = value;
+        k_queue_append(&c.gas_queue, item);
     }
 
     float avg_gas_measured(struct k_queue *gas_que) {
@@ -280,7 +287,7 @@ namespace BME690 {
         int count = 0;
 
         while (!k_queue_is_empty(gas_que)) {
-            void *data = k_queue_get(gas_que, K_MSEC(UTIL::QUE_DELAY));
+            void *data = k_queue_get(gas_que, K_MSEC(sys::util::QUE_DELAY));
             if (data == NULL) {
                 break;
             }
@@ -296,7 +303,7 @@ namespace BME690 {
         // EXPERIMENTAL GAS SENSOR SEQUENCE (FIELD 0)
         current_meas_step = GAS_WAIT_X;
 
-        auto &ctx_util = UTIL::util_ctx();
+        auto &ctx_util = sys::util::ctx ();
         
         // SCHEDULE WORKS
         k_work_schedule(&ctx_util.gas_work, K_NO_WAIT);
@@ -310,11 +317,13 @@ namespace BME690 {
         configure_oversampling();
     }
       
-void bme690_thread(void) 
-{
+    void thread (void) 
+    {
         // THREAD FOR GAS SENSOR AKA TASK IN FREERTOS
-        auto &c = BME690::ctx(); // INITIALIZE REFERENCE TO CONTEXT OBJECT 
-        auto &util_context = UTIL::util_ctx(); // INITIALIZE REFERENCE TO UTIL CONTEXT OBJECT
+
+        // INITIALIZE REFERENCE TO CONTEXT OBJECT 
+        auto &c = sys::sensor::BME690::ctx ();
+        auto &util_context = sys::util::ctx (); // INITIALIZE REFERENCE TO UTIL CONTEXT OBJECT
         uint8_t avg_index = 0;    // INDEX FOR TAKING THE AVERAGE OF THE SAMPLES
         
         // WORKQUEUE
@@ -349,9 +358,7 @@ void bme690_thread(void)
 
             k_mutex_unlock(&util_context.air_mutex); // UNLOCK MUTEX FOR SCD41 SENSOR
         }
-
-}
-
+    }
 } // namespace BME690
 } // namespace sensor
 } // namespace sys

@@ -6,10 +6,13 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(application)
 
 target_sources(app PRIVATE
-    src/main.cpp
-    src/wifictl.hpp
     src/wifictl.cpp
-    src/bme690.hpp
+    src/sockets.cpp
+    src/context.cpp
+    src/util.cpp
+    src/wifictl.cpp
     src/bme690.cpp
+    src/scd41.cpp
+    src/main.cpp
 )
 

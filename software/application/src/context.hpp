@@ -1,33 +1,40 @@
 #pragma once
+
 #include "bme690.hpp"
+#include "scd41.hpp"
+#include "util.hpp"
+#include "wifictl.hpp"
 
-// copywrong. made by Don Pablo
-
-// store system context
-// make it accessible from different parts of code, and make use of thread safe
-// structures? like std::atomic
-// It should be as generic as possible.
-// avoid the use of C++ STL as much as possible, as we avoid dynamic allocation.
+// made by Don Pablo
 
 namespace sys {
 
-class ctx {
-public:
-    ctx (ctx &other) = delete;
-    void operator= (const ctx &) = delete;
+// I want to have a kind of singleton, which is simple.
+// So I could mark it static and go on with my life.
+// manager
 
-    static ctx& instance ()
+// system_state exists for managing system context.
+struct system_state {
+    sensor::BME690::context& bme_data ()
     {
-        // no dynamic allocation AND lazy initialization!
-        static ctx instance; 
-        return instance;
+        return sensor::BME690::ctx ();
     }
 
-    // fields are accessed with -> 
-    sensor::BME690::context* bme690_data;
+    sensor::SCD41::context& scd_data ()
+    {
+        return sensor::SCD41::ctx ();
+    }
 
-private:
-    ctx () = default;
+    util::context& util_data ()
+    {
+        return util::ctx ();
+    }
+
+    wifi::context& wifi_data ()
+    {
+        return wifi::ctx ();
+    }
 };
 
+system_state& ctx ();
 } // namespace sys

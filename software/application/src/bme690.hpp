@@ -91,31 +91,31 @@ namespace BME690 {
         NB_CONV,
     } measurement_steps;
     
+    // NOTE: figure out a way to make reads/writes here thread-safe(somewhat)
+    // maybe use std::atomic, but params here are not really memcpy:able
     struct context {
-        i2c_dt_spec     bme_dev;         // I2C 
-        gas_info         gas_calib;      // CALIBRATION VALUES 
+        i2c_dt_spec     bme_dev;        // I2C 
+        gas_info        gas_calib;      // CALIBRATION VALUES 
         gas_parsed      curated_gas;    // VALUES AFTER CALCULATIONS 
-        k_queue          gas_queue;      // QUUEUE FOR GAS RESISTANCE READINGS 
+        k_queue         gas_queue;      // QUUEUE FOR GAS RESISTANCE READINGS 
         gas_que_item    gas_pool[BME690::GAS_TOTAL_QUE];
     };
- 
+
     context& ctx(void);
 
-    void fetch_gas_values(void);              // FETCH VALUES FROM REGISTERS TO START CALCULATIOS AND CONVERSIONS FOR MEASURING GAS IN ENVIROMENT
-    void calc_res_heat(void);                  // CALCULATE HEAT RESISTANCE 
-    void start_gas_measurement(void);        // PERFORM GAS MEASUREMENTS
-    void soft_reset(void);                      // PERFORM A SOFT RESET, HAS THE SAME EFFECT AS POWER-ON RESET
-    void configure_oversampling(void);      // READS MULTIPLE SAMPLES AND AVERAGES THEM TO IMPROVE MEASUREMENT STABILITY. 
-    void parse_gas_readings(void);            // CONVERT RAW ADC GAS DATA TO OHMS
-    void run_bme690_readings(void);          // READ RESISTANCE DATA ALREADY CONVERTED TO OHMS 
+    void fetch_gas_values(void); // FETCH VALUES FROM REGISTERS TO START CALCULATIOS AND CONVERSIONS FOR MEASURING GAS IN ENVIROMENT
+    void calc_res_heat(void); // CALCULATE HEAT RESISTANCE 
+    void start_gas_measurement(void); // PERFORM GAS MEASUREMENTS
+    void soft_reset(void); // PERFORM A SOFT RESET, HAS THE SAME EFFECT AS POWER-ON RESET
+    void configure_oversampling(void); // READS MULTIPLE SAMPLES AND AVERAGES THEM TO IMPROVE MEASUREMENT STABILITY. 
+    void parse_gas_readings(void); // CONVERT RAW ADC GAS DATA TO OHMS
+    void run_bme690_readings(void); // READ RESISTANCE DATA ALREADY CONVERTED TO OHMS 
     void fetch_work_handler(struct k_work *work);
     void measurement_work_handler(struct k_work *measurements);
-    bool new_gas_readout(void);                // CHECK IF THERE IS A NEW VALID READ
+    bool new_gas_readout(void); // CHECK IF THERE IS A NEW VALID READ
     void gas_sample_push(float gas_item);
     float avg_gas_measured(struct k_queue *gas_queue);
-
-    K_MUTEX_DEFINE(air_mutex);
-
+    void thread (void);
 } // namespace BME690
 } // namespace sensor
 } // namespace sys
