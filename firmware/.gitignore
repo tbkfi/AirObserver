@@ -1,0 +1,20 @@
+# West workspace
+/.west/
+/zephyr/
+/modules/
+/bootloader/
+/tools/
+/bsim/
+
+# Module store
+/modules-src/
+
+# Build output
+**/build/
+
+# Python
+**.venv
+**.env
+
+# setup.sh
+/.log/

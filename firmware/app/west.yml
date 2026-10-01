@@ -1,0 +1,35 @@
+manifest:
+  self:
+    path: app
+
+  remotes:
+    - name: upstream
+      url-base: https://github.com/zephyrproject-rtos
+    - name: tbk-gitea
+      url-base: ssh://git@git.lan.tbk.fi:2222/tbk
+    - name: tbk-github
+      url-base: git@github.com/tbkfi
+
+  projects:
+    - name: zephyr
+      remote: upstream
+      revision: v4.4.2
+      import: true
+
+    - name: my_cli
+      remote: tbk-github
+      repo-path: zephyr-my_cli
+      path: modules/my_cli
+      revision: main
+
+    - name: net_w5500
+      remote: tbk-github
+      repo-path: zephyr-net_w5500
+      path: modules/net_w5500
+      revision: main
+
+    - name: net_w5500_led
+      remote: tbk-github
+      repo-path: zephyr-net_w5500_led
+      path: modules/net_w5500_led
+      revision: main

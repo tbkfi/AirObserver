@@ -1,0 +1,5 @@
+# West & Zephyr
+west==1.5.0
+
+# Robot Framework
+# TODO: migrate working later
