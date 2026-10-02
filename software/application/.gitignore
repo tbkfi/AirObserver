@@ -1,0 +1,15 @@
+.venv
+.west
+build
+bootloader/
+build/
+CMakeLists.txt
+manifest/
+modules/
+nrf/
+nrfxlib/
+start_env.sh
+sysbuild.conf
+test/
+tools/
+zephyr/
