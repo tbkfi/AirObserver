@@ -1,0 +1,12 @@
+*
+
+!.gitignore
+!README.md
+!base5-Body.3mf
+!base5-Body.step
+!base5-Body.stl
+!base5.FCStd
+!roof.FCStd 
+!roof-Body.stl
+!roof-Body.step
+!roof-Body.3mf
