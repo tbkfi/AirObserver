@@ -33,11 +33,11 @@ context& ctx (void);
 static void wifi_event_handler
 (struct net_mgmt_event_callback *cb, uint64_t mgmt_event, struct net_if *iface);
 
-static int wifi_init_and_connect 
-(struct net_if* iface_sta);
+static int wifi_init_and_connect ();
 
 // public function
 int thread (void);
+void reconnect ();
 
 } // wifi
 } // sys

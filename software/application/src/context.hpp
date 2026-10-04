@@ -4,6 +4,7 @@
 #include "scd41.hpp"
 #include "util.hpp"
 #include "wifictl.hpp"
+#include "sockets.hpp"
 
 // made by Don Pablo
 
@@ -33,6 +34,11 @@ struct system_state {
     wifi::context& wifi_data ()
     {
         return wifi::ctx ();
+    }
+
+    net::context& net_data ()
+    {
+        return net::ctx ();
     }
 };
 

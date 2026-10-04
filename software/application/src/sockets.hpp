@@ -15,13 +15,7 @@
 #include <zephyr/logging/log.h>
 
 ////////////////////////////////////////////////////////////////////////////////
-#include <zephyr/posix/sys/socket.h>
-#include <zephyr/posix/arpa/inet.h>
-#include <zephyr/posix/unistd.h>
-
 #include <zephyr/misc/lorem_ipsum.h>
-#include <zephyr/net/net_ip.h>
-#include <zephyr/net/socket.h>
 #include <zephyr/net/tls_credentials.h>
 #include <zephyr/net/websocket.h>
 /////////////////////////////////////////////////////////////////////////////////
@@ -29,15 +23,16 @@
 // maybe ...
 // #include <zephyr/net/tls_credentials.h>
 
-static int setup_socket
-(sa_family_t family, const char *server, int port,
-int *sock, struct sockaddr *addr, socklen_t addr_len);
 
-static int connect_socket
-(sa_family_t family, const char *server, int port,
-int *sock, struct sockaddr *addr, socklen_t addr_len);
-
-void spawn_socket ();
+// static int setup_socket
+// (sa_family_t family, const char *server, int port,
+// int *sock, struct sockaddr *addr, socklen_t addr_len);
+// 
+// static int connect_socket
+// (sa_family_t family, const char *server, int port,
+// int *sock, struct sockaddr *addr, socklen_t addr_len);
+// 
+// void spawn_socket ();
 
 namespace sys {
 namespace tcp {
@@ -57,7 +52,7 @@ struct context {
 class Connection {
 public:
     // each connection has its own context
-    sys::tcp::context local_context;
+    sys::tcp::context local_context {};
 
     // public method to view the data
     sys::tcp::context& ctx ();
@@ -68,32 +63,36 @@ public:
 
     // close TCP socket, gracefully
     void tcp_close ();
+    void ws_close ();
+    
+    // send raw data in TCP socket
+    int tcp_send (void *, size_t);
+    int tcp_recv (size_t, uint8_t *, size_t );
+    int tcp_recv_all (uint8_t *, size_t);
 
-    int raw_send (void *user_data, size_t data_len)
-    {
-        if (local_context.sock == -1)
-        {
-            LOG_ERR("tried sending, but socket is not open.");
-            return 0;
-        }
-       
-        int send_len = send (local_context.sock, user_data, data_len, 0);
-        return send_len;
-    }
+    ssize_t ws_send (void *, size_t);
+    void ws_recv (size_t, uint8_t *, size_t);
+    int ws_recv_all (uint8_t *, size_t);
 
 private:
     // man sockaddr 3
     // It's aligned so that a pointer to it can be cast as a pointer 
     // to other sockaddr_* structures and used to access its fields.
-    sockaddr remote_addr {};
+    net_sockaddr_in remote_addr {};
 };
 
 namespace sys {
 namespace net {
     struct context {
-        
+
+        // zero-initialize
+        char server[64] = {}; 
+        int port = 0;
     };
+
     context& ctx (void);
+
+    void thread ();
 }   // net 
 }   // sys
 

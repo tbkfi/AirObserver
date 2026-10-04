@@ -30,12 +30,12 @@ static void wifi_event_handler
 {
 	switch (mgmt_event) {
 	case NET_EVENT_WIFI_CONNECT_RESULT: {
-		LOG_INF("Connected to %s", CONFIG_WIFI_SAMPLE_SSID);
+		LOG_INF("Connected to %s", sys::wifi::ctx().ssid);
         sys::wifi::ctx ().status = NET_EVENT_WIFI_CONNECT_RESULT;
 		break;
 	}
 	case NET_EVENT_WIFI_DISCONNECT_RESULT: {
-		LOG_INF("Disconnected from %s", CONFIG_WIFI_SAMPLE_SSID);
+		LOG_INF("Disconnected from %s",sys::wifi::ctx().ssid);
         sys::wifi::ctx ().status = NET_EVENT_WIFI_DISCONNECT_RESULT;
 		break;
 	}
@@ -56,9 +56,10 @@ static void wifi_event_handler
     }
     case NET_EVENT_WIFI_SCAN_RESULT: {
         sys::wifi::ctx ().status = NET_EVENT_WIFI_SCAN_RESULT;
-		LOG_INF("Available WIFI networks:");
-
         wifi_scan_result *result = (wifi_scan_result *)cb->info;
+
+		LOG_INF("Found SSID:");
+
         printk("SSID: %s, Q=%ddbm, channel: %d\n",
                result->ssid,
                result->rssi,
@@ -68,7 +69,7 @@ static void wifi_event_handler
         static_string <64> target_ssid (sys::wifi::ctx().ssid);
 
         if (found_ssid == target_ssid)
-            wifi_init_and_connect (sta_iface);
+            wifi_init_and_connect ();
 
         // if scan is issued, and an appropriate network is found
         // the device tries connecting to it.
@@ -77,7 +78,8 @@ static void wifi_event_handler
         break;
     }
     case NET_EVENT_WIFI_SCAN_DONE: {
-		LOG_INF("Available WIFI networks:");
+        sys::wifi::ctx ().status = NET_EVENT_WIFI_SCAN_DONE;
+		LOG_INF("WIFI scan complete.");
         break;
     }
 #if 0
@@ -101,8 +103,7 @@ static void wifi_event_handler
 	}
 }
 
-static int wifi_init_and_connect
-(struct net_if* sta_iface)
+static int wifi_init_and_connect ()
 {
 	if (sta_iface == NULL) {
 		LOG_INF("STA: interface no initialized");
@@ -160,10 +161,8 @@ int thread ()
 	/* Get STA interface in AP-STA mode. */
 	sta_iface = net_if_get_wifi_sta ();
 
-	int ret = net_mgmt ( NET_REQUEST_WIFI_SCAN, sta_iface, nullptr, 0);
-    // &sta_config,
-    // sizeof(wifi_connect_req_params)
-    // );
+	int ret = net_mgmt
+    (NET_REQUEST_WIFI_SCAN, sta_iface, &sta_config, sizeof(wifi_connect_req_params));
 
     // while (1)
     // {
@@ -171,6 +170,18 @@ int thread ()
     // }
     LOG_INF ("thread successfully started.");
 	return ret;
+}
+void reconnect ()
+{
+	LOG_INF("Issue reconnect to: %s\n", sta_config.ssid);
+
+	int ret = net_mgmt (NET_REQUEST_WIFI_CONNECT, sta_iface, &sta_config,
+			   sizeof(struct wifi_connect_req_params));
+
+	if (ret) {
+		LOG_ERR("Unable to Connect to (%s)", sta_config.ssid);
+	}
+    
 }
 
 } // wifi 

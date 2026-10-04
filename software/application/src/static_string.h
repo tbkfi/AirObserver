@@ -80,13 +80,23 @@ public:
         return data_;
     }
 
+    bool clear () {
+        void *ptr = memset (data_, 0, max_length_);
+
+        if (ptr == (void *)data_)
+            return true;
+        else
+            return false;
+    }
+
     bool append (const char *buf, size_t len)
     {
-        if (len + size_ > max_length_)
+        if (len + size() > max_length_)
             return true;
 
-        memcpy (data_, buf, len);
-        size_ += len;
+        memcpy (data_ + size(), buf, len);
+        size_ = size ();
+
         data_[size_] = '\0'; // null - terminate
         return false;
     }
@@ -118,10 +128,12 @@ public:
         // copy only what fits
         size_t to_copy = rhs.size ();
         if ((to_copy + this->size ()) > max_length)
-            to_copy = max_length - to_copy;
+            to_copy = max_length - size ();
+            // to_copy = max_length - to_copy;
 
-        memcpy (dest, rhs.data (), to_copy);
+        memmove (dest, rhs.c_str (), to_copy);
         size_ += to_copy;
+        return *this;
     }
 
     static_string& operator=( const static_string& str )
@@ -130,9 +142,11 @@ public:
         if (to_replace > max_length_)
             to_replace = max_length_;
 
-        memcpy ((void *)data_, str.c_str (), to_replace);
+        memmove ((void *)data_, str.c_str (), to_replace);
         size_ = to_replace;
         data_[size_] = '\0';
+
+        return *this;
     }
 
     static_string& operator=( const char *str )
@@ -141,9 +155,10 @@ public:
         if (to_replace > max_length_)
             to_replace = max_length_;
 
-        memcpy ((void *)data_, str, to_replace);
+        memmove ((void *)data_, str, to_replace);
         size_ = to_replace;
         data_[size_] = '\0';
+        return *this;
     }
 
     static_string& operator=( const uint8_t *byte_str )
@@ -155,6 +170,7 @@ public:
         memcpy ((void *)data_, byte_str, to_replace);
         size_ = to_replace;
         data_[size_] = '\0';
+        return *this;
     }
 
     template <size_t N, size_t M> bool
