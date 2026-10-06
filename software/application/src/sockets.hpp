@@ -35,7 +35,7 @@
 // void spawn_socket ();
 
 namespace sys {
-namespace tcp {
+namespace transport {
 struct context {
 // connection-specific context
     bool tcp_open;
@@ -43,23 +43,20 @@ struct context {
     int sock;
     int sock_ws;
     int port;
-    static_string <64> server;
+    sys::static_string <64> server;
 };
-} // tcp
-} // sys
-
 // object for creating and managing sockets
-class Connection {
+class connection {
 public:
     // each connection has its own context
-    sys::tcp::context local_context {};
+    sys::transport::context local_context {};
 
     // public method to view the data
-    sys::tcp::context& ctx ();
+    sys::transport::context& ctx ();
 
     // open TCP socket, but do not send anything
     int tcp_open (const char *server, int port);
-    int ws_upgrade ();
+    int ws_open (const char *server, int port);
 
     // close TCP socket, gracefully
     void tcp_close ();
@@ -81,18 +78,6 @@ private:
     net_sockaddr_in remote_addr {};
 };
 
-namespace sys {
-namespace net {
-    struct context {
-
-        // zero-initialize
-        char server[64] = {}; 
-        int port = 0;
-    };
-
-    context& ctx (void);
-
-    void thread ();
-}   // net 
-}   // sys
+} // transport
+} // sys
 

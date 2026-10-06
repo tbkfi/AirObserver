@@ -65,8 +65,8 @@ static void wifi_event_handler
                result->rssi,
                result->channel);
 
-        static_string <64> found_ssid (result->ssid);
-        static_string <64> target_ssid (sys::wifi::ctx().ssid);
+        sys::static_string <64> found_ssid (result->ssid);
+        sys::static_string <64> target_ssid (sys::wifi::ctx().ssid);
 
         if (found_ssid == target_ssid)
             wifi_init_and_connect ();

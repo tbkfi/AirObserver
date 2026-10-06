@@ -4,7 +4,7 @@
 #include "scd41.hpp"
 #include "util.hpp"
 #include "wifictl.hpp"
-#include "sockets.hpp"
+#include "net_thread.hpp"
 
 // made by Don Pablo
 

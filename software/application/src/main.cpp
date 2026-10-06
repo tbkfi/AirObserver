@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "sockets.hpp"
+#include "net_thread.hpp"
 #include "static_string.h"
 
 //K_THREAD_DEFINE (name, stack_size, entry, p1, p2, p3, prio, options, delay )
@@ -19,13 +19,13 @@ int main(void)
 {
     auto& ctx_wifi = sys::ctx ().wifi_data ();
 
-    char new_ssid[] = "htspot";
-    char new_passwd[] = "netconn1337";
+    char new_ssid[] = "ASUS_boneyard";
+    char new_passwd[] = "publicstaticvoidmainstringargs";
 
     memcpy (ctx_wifi.ssid, new_ssid, sizeof (new_ssid));
     memcpy (ctx_wifi.psk, new_passwd, sizeof (new_passwd));
 
-    char server[] = "10.200.213.57";
+    char server[] = "10.0.10.143";
     int port = 1337;
 
     memcpy (sys::ctx().net_data ().server, server, sizeof (server));

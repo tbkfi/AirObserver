@@ -2,6 +2,8 @@
 #include <string.h>
 
 // fixed-size string with read/write possiblities,
+namespace sys {
+
 template <size_t max_length>
 class static_string {
 public:
@@ -240,3 +242,4 @@ bool operator==
         return true;
 }
 
+} // sys
