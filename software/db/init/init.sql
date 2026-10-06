@@ -7,9 +7,10 @@ GRANT ALL PRIVILEGES ON DATABASE airsniffs TO airsniffer;
 CREATE TABLE sniffs
 (
     sniff_id SERIAL NOT NULL,
-    co2 INT NOT NULL,
-    carb INT NOT NULL,
-    data VARCHAR(500) NOT NULL,
+    co2 FLOAT NOT NULL,
+    humidity FLOAT NOT NULL,
+    temperature FLOAT NOT NULL,
+    data VARCHAR(500) NULL,
     created_at DATE DEFAULT NOW(),
     PRIMARY KEY (sniff_id)
 );

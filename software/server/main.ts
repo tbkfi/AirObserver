@@ -3,7 +3,8 @@ const { Pool } = pg;
 
 interface SniffPayload {
   co2: number;
-  carb: number;
+  humidity: number;
+  temperature: number;
   data: string;
 }
 interface Sniff extends SniffPayload {
@@ -11,6 +12,13 @@ interface Sniff extends SniffPayload {
   created_at: string | Date;
 }
 
+
+
+
+
+//==============================
+// PAYLOAD
+//==============================
 function isValidPayload(body: unknown): body is SniffPayload {
   if (typeof body !== "object" || body === null) {
     return false;
@@ -18,15 +26,18 @@ function isValidPayload(body: unknown): body is SniffPayload {
   const obj = body as Record<string, unknown>;
   return (
     typeof obj?.co2 == "number" &&
-    Number.isInteger(obj.co2) &&
-    typeof obj.carb == "number" &&
-    Number.isInteger(obj.carb) &&
+    typeof obj.humidity == "number" &&
+    typeof obj.temperature == "number" &&
     typeof obj?.data == "string"
   );
 }
 function isValidPayloadArray(body: unknown): body is SniffPayload[] {
   return Array.isArray(body) && body.length > 0 && body.every(isValidPayload);
 }
+
+
+
+
 //==============================
 // DATABASE
 //==============================
@@ -35,34 +46,42 @@ const pool = new Pool({
   connectionString: databaseUrl,
 });
 
-console.log(databaseUrl);
-//----------------
-// functions
-//----------------
-async function insertSniff({ co2, carb, data }: SniffPayload): Promise<Sniff> {
+
+
+
+
+//==============================
+// FUNCTIONS
+//==============================
+
+async function insertSniff({ co2, humidity, temperature, data }: SniffPayload): Promise<Sniff> {
   const query =
-    `INSERT INTO sniffs (co2, carb, data) VALUES ($1,$2,$3) RETURNING sniff_id, co2, carb,data,created_at;`;
-  const result = await pool.query(query, [co2, carb, data]);
+    `INSERT INTO sniffs (co2, humidity, temperature, data) VALUES ($1,$2,$3, $4) RETURNING sniff_id, co2, humidity, temperature, data, created_at;`;
+  const result = await pool.query(query, [co2, humidity, temperature, data]);
   return result.rows[0];
 }
+
+
 async function insertManySniffs(sniffs: SniffPayload[]): Promise<Sniff[]> {
   if (sniffs.length === 0) return [];
   const valuePlaceholders: string[] = [];
   const params: unknown[] = [];
   sniffs.forEach((sniff, index) => {
-    const offset = index * 3;
-    valuePlaceholders.push(`($${offset +1}, $${offset + 2}, $${offset + 3})`);
-    params.push(sniff.co2, sniff.carb, sniff.data);
+    const offset = index * 4;
+    valuePlaceholders.push(`($${offset +1}, $${offset + 2}, $${offset + 3}, $${offset + 4})`);
+    params.push(sniff.co2, sniff.humidity, sniff.temperature, sniff.data);
   });
-  const query = `INSERT INTO sniffs (co2, carb, data) VALUES ${
+  const query = `INSERT INTO sniffs (co2, humidity, temperature, data) VALUES ${
     valuePlaceholders.join(", ")
-  } RETURNING sniff_id, co2, carb, data, created_at;`;
+  } RETURNING sniff_id, co2, humidity, temperature, data, created_at;`;
   const result = await pool.query(query, params);
   return result.rows;
 }
+
+
 async function selectAllSniffs(): Promise<Sniff[]> {
   const query =
-    `SELECT sniff_id, co2, carb, data, created_at FROM sniffs ORDER BY created_at DESC;`;
+    `SELECT sniff_id, co2, humidity, temperature, data, created_at FROM sniffs ORDER BY created_at DESC;`;
   const result = await pool.query(query);
   return result.rows;
 }

@@ -39,7 +39,7 @@ cd AirObserver/software
 3. Run docker compile file:
 
 ```bash
-docker compose -f /docker/docker-compose.yml up --build -d
+docker compose -f docker/docker-compose.yml up --build
 
 ```
 
@@ -54,7 +54,7 @@ cd AirObserver/software
 2. docker compile command to remove containers:
 
 ```bash
-docker compose -f /docker/docker-compose.yml up down
+docker compose -f docker/docker-compose.yml up down
 ```
 
 ## 4. How to format data
@@ -73,7 +73,7 @@ curl -X GET http://localhost:3000/sniffs \
 ```bash
 curl -X POST http://localhost:3000/sniffs \
   -H "Content-Type: application/json" \
-  -d '{"co2": 943, "carb": 56, "data": "single_room"}'
+  -d '{"co2": 9.43, "humidity": 0.4, "temperature": 10.5, "data": "metadata: single_room"}'
 ```
 
 * Insert data in batch from sensor device into database
@@ -82,9 +82,9 @@ curl -X POST http://localhost:3000/sniffs \
 curl -X POST http://localhost:3000/sniffs/batch \
   -H "Content-Type: application/json" \
   -d '[
-    {"co2": 450, "carb": 12, "data": "room_a"},
-    {"co2": 520, "carb": 18, "data": "room_b"},
-    {"co2": 410, "carb": 9, "data": "room_c"}
+    {"co2": 4.50, "humidity": 0.4, "temperature": 10.5, "data": "metadata: room_a"},
+    {"co2": 5.20, "humidity": 0.5, "temperature": 40.5, "data": "metadata: room_b"},
+    {"co2": 4.10, "humidity": 0.2, "temperature": 30.5, "data": "metadata: room_c"}
   ]'
 ```
 
@@ -103,7 +103,7 @@ curl -X POST http://localhost:3000/sniffs/batch \
 {
    "command": "insert",
    "payload_id": "random_uuid",
-   "sniff": {"co2": 943, "carb": 56, "data": "single_room"}
+   "sniff": {"co2": 0,8, "humidity": 0.5, "temperature": 30.8, "data": "metadata: single_room"}
 }
 ```
 
@@ -114,9 +114,9 @@ curl -X POST http://localhost:3000/sniffs/batch \
    "command": "insertMany",
    "payload_id": "random_uuid",
    "sniffs": [
-    {"co2": 450, "carb": 12, "data": "room_a"},
-    {"co2": 520, "carb": 18, "data": "room_b"},
-    {"co2": 410, "carb": 9, "data": "room_c"}
+    {"co2": 0.2, "humidity": 0.4, "temperature": 10.5, "data": "metadata: room_a"},
+    {"co2": 0.5, "humidity": 0.5, "temperature": 30.8, "data": "metadata: room_b"},
+    {"co2": 0.9, "humidity": 0.6, "temperature": 46.3, "data": "metadata: room_c"}
   ]
 }
 ```
