@@ -103,7 +103,7 @@ curl -X POST http://localhost:3000/sniffs/batch \
 {
    "command": "insert",
    "payload_id": "random_uuid",
-   "sniff": {"co2": 0,8, "humidity": 0.5, "temperature": 30.8, "data": "metadata: single_room"}
+   "sniff": {"co2": 0.8, "humidity": 0.5, "temperature": 30.8, "data": "metadata: single_room"}
 }
 ```
 
