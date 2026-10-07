@@ -335,9 +335,10 @@ const html = `<!DOCTYPE html>
 
     function connect() {
       const protocol = location.protocol === "https:" ? "wss:" : "ws:";
-      const ws = new WebSocket(\`\${protocol}//\${location.host}\`);
+      const ws = new WebSocket(protocol+location.host);
 
       ws.onopen = () => {
+        console.log("WebSocket connected!");
         statusEl.textContent = "Live";
         statusEl.className = "badge online";
       };
