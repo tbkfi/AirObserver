@@ -1,0 +1,104 @@
+&pinctrl {
+    i2c1_default: i2c1_default {
+        group1 {
+            psels = <NRF_PSEL(TWIM_SDA, 0, 4)>,
+                    <NRF_PSEL(TWIM_SCL, 0, 5)>;
+            bias-pull-up; 
+        };
+    };
+
+    i2c1_sleep: i2c1_sleep {
+        group1 {
+            psels = <NRF_PSEL(TWIM_SDA, 0, 4)>,
+                    <NRF_PSEL(TWIM_SCL, 0, 5)>;
+            low-power-enable;
+        };
+    };
+
+    spi2_default: spi2_default {
+        group1 {
+            psels = <NRF_PSEL(SPIM_SCK, 0, 8)>,
+                    <NRF_PSEL(SPIM_MOSI, 0, 9)>;
+        };
+    };
+
+    spi2_sleep: spi2_sleep {
+        group1 {
+            psels = <NRF_PSEL(SPIM_SCK, 0, 8)>,
+                    <NRF_PSEL(SPIM_MOSI, 0, 9)>;
+            low-power-enable;
+        };
+    };
+};
+
+&i2c1 {
+    compatible = "nordic,nrf-twim";
+    status = "okay";
+    clock-frequency = <I2C_BITRATE_STANDARD>;
+    pinctrl-0 = <&i2c1_default>;
+    pinctrl-1 = <&i2c1_sleep>;
+    pinctrl-names = "default", "sleep";
+
+    scd41: scd41@62 {
+        compatible = "sensirion,scd41";
+        reg = <0x62>;
+        label = "SCD41";
+        mode = <0>; // Normal periodic measurement
+        status = "okay";
+    };
+
+    bme690: bme690@76 {
+        compatible = "bosch,bme690";
+        reg = <0x76>;
+        label = "BME690";
+// Single TPHG cycle is performed. Sensor automatically returns to sleep mode.
+// Gas sensor heater only operates during gas measurement.
+        mode = <1>;
+        status = "okay";
+    };
+};
+
+
+&spi2 {
+    compatible = "nordic,nrf-spim";
+    status = "okay";
+    pinctrl-0 = <&spi2_default>;
+    pinctrl-1 = <&spi2_sleep>;
+    pinctrl-names = "default", "sleep";
+
+    cs-gpios = <&gpio0 10 GPIO_ACTIVE_LOW>;
+};
+
+/ {
+    aliases {
+        display-controller = &ssd1680;
+    };
+    chosen {
+        zephyr,display = &ssd1680;
+    };
+
+    mipi_dbi {
+        compatible = "zephyr,mipi-dbi-spi";
+        spi-dev = <&spi2>;
+
+        dc-gpios = <&gpio0 11 GPIO_ACTIVE_HIGH>;
+        reset-gpios = <&gpio0 12 GPIO_ACTIVE_LOW>;
+
+        #address-cells = <1>;
+        #size-cells = <0>;
+
+        ssd1680: ssd1680@0 {
+            compatible = "solomon,ssd1680";
+            reg = <0>;
+            mipi-max-frequency = <4000000>;
+
+            busy-gpios = <&gpio0 23 GPIO_ACTIVE_HIGH>;
+
+            width = <122>;
+            height = <250>;
+            tssv = <0x80>;
+            rotation = <0>;
+        };
+    };
+};
+
